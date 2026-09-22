@@ -30,6 +30,7 @@ Chartmeter answers three questions continuously:
 - [`docs/03-regional-playbook.md`](docs/03-regional-playbook.md) — Phase 3: regional promotion & distribution tactics
 - [`docs/04-execution-workflow.md`](docs/04-execution-workflow.md) — auditing cadence & strategic gap analysis
 - [`docs/05-data-schemas.md`](docs/05-data-schemas.md) — field reference for everything in `data/`
+- [`docs/06-data-sources.md`](docs/06-data-sources.md) — **automated stat fetching**: which APIs work, which don't, and why
 
 ## Templates
 
@@ -52,6 +53,32 @@ python3 scripts/chartmeter.py report     # full markdown report -> stdout
 
 No third-party dependencies beyond Python 3.8+ (`scripts/chartmeter.py` ships a minimal
 YAML subset parser so it runs anywhere).
+
+## Automated stat fetching
+
+Stop entering numbers by hand. `scripts/fetch_stats.py` pulls from platform APIs
+straight into `data/`:
+
+```bash
+cp .env.example .env                        # add your keys (gitignored)
+python3 scripts/fetch_stats.py --check      # which providers are configured
+python3 scripts/fetch_stats.py --dry-run    # preview, writes nothing
+python3 scripts/fetch_stats.py --history    # write + log to data/history.csv
+```
+
+| Provider | Fills | Notes |
+|---|---|---|
+| Boomplay OpenAPI | `boomplay_streams` | Most relevant for East Africa; partner approval needed |
+| YouTube Data API v3 | `youtube_subscribers`, `youtube_views` | Free key, 10k units/day |
+| Last.fm | `lastfm_listeners`, `lastfm_playcount` | Instant free key; trend line only |
+| MusicBrainz | `release_count` | Keyless |
+| Spotify | `spotify_followers`, `spotify_popularity` | **No monthly listeners — no API exposes them** |
+
+Fieldwork metrics (DJ spins, radio adds, WhatsApp list, live shows) and
+`monthly_listeners` stay manual by design; the script refuses to write them.
+Full detail and setup in [`docs/06-data-sources.md`](docs/06-data-sources.md).
+A monthly GitHub Action (`.github/workflows/refresh-stats.yml`) can do the refresh
+and open a PR with the diff.
 
 ## Site & deployment
 

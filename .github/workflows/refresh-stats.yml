@@ -1,0 +1,50 @@
+name: Refresh stats
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"   # 06:00 UTC on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Show provider status
+        run: python3 scripts/fetch_stats.py --check
+
+      - name: Fetch stats
+        env:
+          BOOMPLAY_APP_ID: ${{ secrets.BOOMPLAY_APP_ID }}
+          BOOMPLAY_APP_SECRET: ${{ secrets.BOOMPLAY_APP_SECRET }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+        # No secrets configured -> exits 1 harmlessly; don't fail the workflow.
+        run: python3 scripts/fetch_stats.py --history || echo "no providers configured"
+
+      - name: Validate
+        run: python3 scripts/chartmeter.py validate
+
+      - name: Open PR with the diff
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/refresh-stats
+          title: "Monthly stat refresh"
+          commit-message: "chore: automated stat refresh"
+          body: |
+            Automated refresh from `scripts/fetch_stats.py`.
+
+            Manual-only metrics (monthly listeners, DJ spins, radio adds,
+            WhatsApp list size, live shows) are untouched by design —
+            see `docs/06-data-sources.md`.
+          delete-branch: true

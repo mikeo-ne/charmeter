@@ -29,6 +29,7 @@ PAGES = [
     ("regional-playbook.html", "docs/03-regional-playbook.md", "3 · Regional Playbook"),
     ("execution-workflow.html", "docs/04-execution-workflow.md", "Execution Workflow"),
     ("data-schemas.html", "docs/05-data-schemas.md", "Data Schemas"),
+    ("data-sources.html", "docs/06-data-sources.md", "Automated Data Sources"),
     ("report.html", None, "Live Report"),
     ("templates.html", None, "Templates"),
 ]

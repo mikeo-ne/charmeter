@@ -1,0 +1,58 @@
+# Chartmeter - Platform ID mapping for automated stat fetching.
+#
+# Maps each artist/competitor NAME (must match data/artist-baseline.yml and
+# data/competitors.yml exactly) to its per-platform identifiers.
+# Leave an id blank or omit it to skip that provider for that act.
+#
+# Find the ids:
+#   boomplay   - open the artist page, the number in /artists/<ID> is the id
+#   youtube    - channel id (UC...), or use the @handle form
+#   lastfm     - the artist name as Last.fm spells it
+#   musicbrainz- the MBID uuid from musicbrainz.org/artist/<MBID>
+#   audiomack  - the url slug from audiomack.com/<slug>
+#   spotify    - artist id; catalogue only, NOT monthly listeners (see docs/06)
+
+artists:
+  - name: Nsimbi
+    boomplay: "123"
+    youtube: "UCxxx"
+    lastfm: ""
+    musicbrainz: ""
+    audiomack: ""
+    spotify: ""
+
+  - name: Kayz Muwonge
+    boomplay: "123"
+    youtube: "UCxxx"
+    lastfm: ""
+    audiomack: ""
+
+  - name: Zaituni
+    boomplay: "123"
+    youtube: "UCxxx"
+    lastfm: ""
+    audiomack: ""
+
+  - name: Brian Ssekanjako
+    boomplay: "123"
+    youtube: "UCxxx"
+    lastfm: ""
+    audiomack: ""
+
+  - name: Deejay Ntale
+    boomplay: "123"
+    youtube: "UCxxx"
+    lastfm: ""
+    audiomack: ""
+
+  - name: Mariam Kiwanuka
+    boomplay: "123"
+    youtube: "UCxxx"
+    lastfm: ""
+    audiomack: ""
+
+  - name: Juma Bakari
+    boomplay: "123"
+    youtube: "UCxxx"
+    lastfm: ""
+    audiomack: ""

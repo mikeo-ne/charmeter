@@ -3,3 +3,4 @@ __pycache__/
 report.md
 .DS_Store
 site/
+.env
