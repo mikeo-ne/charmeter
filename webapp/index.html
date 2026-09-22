@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chartmeter — East Africa Music Intelligence</title>
+<meta name="description" content="Tier-matched competitor benchmarking and strategic gap analysis for East African independent music careers.">
+<link rel="stylesheet" href="app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📊</text></svg>">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="mark">CM</span>
+      <div>
+        <strong>Chartmeter</strong>
+        <small>East Africa Intelligence Hub</small>
+      </div>
+    </div>
+
+    <nav id="nav">
+      <button data-view="overview" class="active"><span>◈</span> Overview</button>
+      <button data-view="gaps"><span>◆</span> Gap Analysis</button>
+      <button data-view="competitors"><span>◇</span> Competitor Matrix</button>
+      <button data-view="radar"><span>◉</span> DJ &amp; Radio Radar</button>
+      <button data-view="swipe"><span>❏</span> Swipe File</button>
+      <button data-view="sources"><span>⇄</span> Data Sources</button>
+    </nav>
+
+    <div class="side-foot">
+      <button id="reset" class="ghost sm">Reset demo data</button>
+      <p class="tiny">Edits are sandboxed to a working copy. The repo's
+      <code>data/*.yml</code> is never modified.</p>
+    </div>
+  </aside>
+
+  <main id="main">
+    <div class="loading">Loading…</div>
+  </main>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="modal-title">Add competitor</h3>
+      <button id="modal-close" class="ghost sm">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

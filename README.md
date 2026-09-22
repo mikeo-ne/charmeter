@@ -31,6 +31,7 @@ Chartmeter answers three questions continuously:
 - [`docs/04-execution-workflow.md`](docs/04-execution-workflow.md) — auditing cadence & strategic gap analysis
 - [`docs/05-data-schemas.md`](docs/05-data-schemas.md) — field reference for everything in `data/`
 - [`docs/06-data-sources.md`](docs/06-data-sources.md) — **automated stat fetching**: which APIs work, which don't, and why
+- [`docs/07-demo-guide.md`](docs/07-demo-guide.md) — **running a client demo**: the ten-minute script
 
 ## Templates
 
@@ -53,6 +54,20 @@ python3 scripts/chartmeter.py report     # full markdown report -> stdout
 
 No third-party dependencies beyond Python 3.8+ (`scripts/chartmeter.py` ships a minimal
 YAML subset parser so it runs anywhere).
+
+## The web app
+
+An interactive client-facing app — dashboard, gap analysis, and an editable
+competitor matrix that enforces the tiering rules:
+
+```bash
+python3 scripts/server.py --port 3000    # then open http://localhost:3000
+```
+
+Stdlib only, no build step. Analysis is imported from `chartmeter.py`, so the web app
+and the CLI can never disagree. Demo edits go to a gitignored working copy
+(`data/workspace.json`) — `data/*.yml` is never modified, and **Reset demo data**
+restores the seed. Demo script in [`docs/07-demo-guide.md`](docs/07-demo-guide.md).
 
 ## Automated stat fetching
 

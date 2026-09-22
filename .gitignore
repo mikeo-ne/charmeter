@@ -4,3 +4,5 @@ report.md
 .DS_Store
 site/
 .env
+data/workspace.json
+data/workspace.json.tmp
