@@ -2,7 +2,7 @@ name: Deploy Chartmeter site
 
 on:
   push:
-    branches: [main]
+    branches: [main, "arena/**"]
   workflow_dispatch:
 
 permissions:
@@ -36,8 +36,10 @@ jobs:
         with:
           path: site
 
+  # Only the default branch publishes; other branches build-and-validate only.
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
