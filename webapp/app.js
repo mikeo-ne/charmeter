@@ -1,140 +1,278 @@
-/* Chartmeter demo app — vanilla JS, no build step. */
+/* Chartmeter — homepage, auth, dashboard. Vanilla JS, no build step. */
 (function () {
   "use strict";
 
+  var home = document.getElementById("home");
+  var appEl = document.getElementById("app");
   var main = document.getElementById("main");
   var modal = document.getElementById("modal");
   var modalBody = document.getElementById("modal-body");
   var modalTitle = document.getElementById("modal-title");
   var view = "overview";
   var cache = {};
+  var session = { signed_in: false, user: null };
 
-  // ---------------------------------------------------------------- utils
+  // ------------------------------------------------------------- utils
   function api(path, opts) {
     return fetch("/api" + path, opts).then(function (r) {
-      return r.json().then(function (body) {
-        if (!r.ok) throw body;
-        return body;
-      });
+      return r.json().then(function (b) { if (!r.ok) throw b; return b; });
     });
   }
-
+  function post(path, data) {
+    return api(path, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data || {})
+    });
+  }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-
-  function num(v) {
-    if (v == null || v === "") return "—";
-    if (typeof v !== "number") return esc(v);
-    if (Math.abs(v) < 1 && v !== 0) return Math.round(v * 100) + "%";
-    return v.toLocaleString();
-  }
-
   function metricVal(key, v) {
-    if (v == null) return "—";
+    if (v == null || v === "") return "—";
     if (key === "crossborder_listener_share") return Math.round(v * 100) + "%";
     return typeof v === "number" ? v.toLocaleString() : esc(v);
   }
-
   function pct(p) {
     if (p == null || !isFinite(p)) return "—";
     return (p > 0 ? "+" : "") + Math.round(p) + "%";
   }
-
   function toast(msg, isErr) {
     var t = document.getElementById("toast");
     t.textContent = msg;
     t.className = "toast show" + (isErr ? " err" : "");
     clearTimeout(t._t);
-    t._t = setTimeout(function () { t.className = "toast"; }, 2800);
+    t._t = setTimeout(function () { t.className = "toast"; }, 3000);
   }
-
   function tierPill(t) {
     var cls = t === "upcoming" ? "up" : t === "mid" ? "mid" : "asp";
-    var label = t === "upcoming" ? "Upcoming" : t === "mid" ? "Mid-level" : "Aspirational";
-    return '<span class="pill ' + cls + '">' + label + "</span>";
+    var l = t === "upcoming" ? "Upcoming" : t === "mid" ? "Mid-level" : "Aspirational";
+    return '<span class="pill ' + cls + '">' + l + "</span>";
+  }
+  function errBox(errors) {
+    return '<div class="errs"><strong>Could not continue:</strong><ul>' +
+      errors.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + "</ul></div>";
+  }
+  function demoBanner(on) {
+    if (!on) return "";
+    return '<div class="demo-banner"><span><strong>Demo workspace.</strong> ' +
+      "You're exploring sample data. Create an account to track your own artist.</span>" +
+      '<button class="btn sm" data-auth="signup">Create account</button></div>';
   }
 
-  function spinner() { main.innerHTML = '<div class="loading">Loading…</div>'; }
+  // ------------------------------------------------------------- auth UI
+  function openAuth(mode, errors) {
+    var isSignup = mode === "signup";
+    modalTitle.textContent = isSignup ? "Create your account" : "Sign in";
+    modalBody.innerHTML =
+      (errors ? errBox(errors) : "") +
+      '<form id="af">' +
+        '<div class="field"><label>Email</label>' +
+          '<input name="email" type="email" required autocomplete="email"></div>' +
+        '<div class="field"><label>Password</label>' +
+          '<input name="password" type="password" required minlength="8" ' +
+          'autocomplete="' + (isSignup ? "new-password" : "current-password") + '">' +
+          (isSignup ? '<div class="hint">At least 8 characters.</div>' : "") + "</div>" +
+        (isSignup ?
+          '<div class="field"><label>Artist name</label><input name="artist_name" required></div>' +
+          '<div class="form-grid">' +
+            '<div class="field"><label>City</label><input name="city" placeholder="Kampala"></div>' +
+            '<div class="field"><label>Country</label><select name="country">' +
+              ["UG", "KE", "TZ", "RW", "Other"].map(function (c) {
+                return '<option>' + c + "</option>"; }).join("") + "</select></div>" +
+          "</div>" +
+          '<div class="field"><label>Subgenre</label>' +
+            '<select name="subgenre">' +
+            ["luganda-pop", "regional-afrobeats", "ea-amapiano", "dancehall-reggae",
+             "kidandali", "gengetone", "bongo-flava", "afro-house"].map(function (g) {
+              return "<option>" + g + "</option>"; }).join("") + "</select>" +
+            '<div class="hint">You are only ever benchmarked against this exact subgenre.</div></div>'
+          : "") +
+        '<button class="btn lg" type="submit" style="width:100%;margin-top:6px">' +
+          (isSignup ? "Create account" : "Sign in") + "</button>" +
+      "</form>" +
+      '<div class="auth-switch">' + (isSignup
+        ? 'Already have an account? <button data-sw="login">Sign in</button>'
+        : 'New here? <button data-sw="signup">Create an account</button>') + "</div>";
 
-  // ---------------------------------------------------------------- views
+    modal.hidden = false;
+    modalBody.querySelectorAll("[data-sw]").forEach(function (b) {
+      b.onclick = function () { openAuth(b.getAttribute("data-sw")); };
+    });
+    document.getElementById("af").onsubmit = function (ev) {
+      ev.preventDefault();
+      var payload = {};
+      new FormData(ev.target).forEach(function (v, k) { payload[k] = v; });
+      post("/auth/" + (isSignup ? "signup" : "login"), payload)
+        .then(function (r) {
+          session = { signed_in: true, user: r.user };
+          closeModal();
+          toast(isSignup ? "Welcome to Chartmeter" : "Signed in");
+          showApp();
+          view = isSignup ? "connect" : "overview";
+          syncNav();
+          render();
+        })
+        .catch(function (e) { openAuth(mode, (e && e.errors) || ["Something went wrong."]); });
+    };
+  }
+  function closeModal() { modal.hidden = true; modalBody.innerHTML = ""; }
+
+  // ------------------------------------------------------------- views
   var views = {};
 
   views.overview = function () {
     return api("/overview").then(function (d) {
-      var a = d.artist, c = d.counts;
-      var m = a.metrics || {};
-      var deficits = d.top_deficits.map(function (r, i) {
-        return '<div class="action"><div class="n">' + (i + 1) + "</div><div>" +
-          "<p><strong>" + esc(r.label) + "</strong> &middot; " +
-          '<span class="pill def">' + pct(r.pct) + "</span></p>" +
-          '<p class="sub">' + esc(r.action || "") + "</p></div></div>";
-      }).join("") || '<p class="empty">No deficits against the peer median.</p>';
+      var a = d.artist || {}, m = a.metrics || {}, c = d.counts;
+      var linked = Object.keys(d.linked || {}).length;
 
-      var surplus = d.top_surpluses.map(function (r) {
-        return '<div class="action"><div class="n">★</div><div>' +
-          "<p><strong>" + esc(r.label) + "</strong> &middot; " +
-          '<span class="pill sur">' + pct(r.pct) + "</span></p>" +
-          '<p class="sub">This is the wedge — over-invest here before fixing anything else.</p>' +
-          "</div></div>";
-      }).join("") || '<p class="empty">No surplus yet. Manufacture one.</p>';
-
-      return '<div class="page-head"><h1>' + esc(a.name) + "</h1>" +
-        "<p>" + esc(a.city || "") + ", " + esc(a.country || "") + " &middot; " +
-        esc(a.subgenre || "") + " &middot; " + esc(a.tier || "") + " tier</p></div>" +
-
-        '<div class="grid g4">' +
-          card_stat("Monthly listeners", metricVal("monthly_listeners", m.monthly_listeners), "manual — Spotify for Artists") +
-          card_stat("Boomplay streams", metricVal("boomplay_streams", m.boomplay_streams), "auto — Boomplay API") +
-          card_stat("DJ spins (30d)", metricVal("dj_spins_30d", m.dj_spins_30d), "manual — fieldwork") +
-          card_stat("WhatsApp list", metricVal("whatsapp_list_size", m.whatsapp_list_size), "manual — your list") +
-        "</div>" +
-
-        '<div class="grid g3" style="margin-top:14px">' +
-          '<div class="card"><div class="health">' +
-            '<div class="ring" style="--p:' + d.health + '"><b>' + d.health + "%</b></div>" +
-            "<div><div class=\"stat\"><span class=\"k\">Competitive health</span>" +
-            '<span class="s">Share of dimensions at or above the peer median.</span></div></div>' +
+      if (!linked && !m.monthly_listeners && !d.demo) {
+        return demoBanner(false) +
+          '<div class="page-head"><h1>Welcome, ' + esc(a.name || "") + "</h1>" +
+          "<p>Two steps and your dashboard fills itself in.</p></div>" +
+          '<div class="card"><div class="action"><div class="n">1</div><div>' +
+          "<p><strong>Connect your platforms</strong></p>" +
+          '<p class="sub">Paste your Spotify, Boomplay or YouTube artist links and sync.</p>' +
+          '<div style="margin-top:10px"><button class="btn" data-go="connect">Connect platforms</button></div>' +
           "</div></div>" +
-          '<div class="card"><div class="stat"><span class="k">Peer set</span>' +
-            '<span class="v">' + c.peers + "</span>" +
-            '<span class="s">of ' + c.competitors + " tracked acts match tier + subgenre</span></div></div>" +
-          '<div class="card"><div class="stat"><span class="k">Radar going cold</span>' +
-            '<span class="v ' + (c.cold ? "bad" : "ok") + '">' + c.cold + "</span>" +
-            '<span class="s">of ' + c.radar + " contacts not touched in 30 days</span></div></div>" +
-        "</div>" +
+          '<div class="action"><div class="n">2</div><div>' +
+          "<p><strong>Find your competition</strong></p>" +
+          '<p class="sub">We shortlist acts in your subgenre and tier once your stats are in.</p>' +
+          '<div style="margin-top:10px"><button class="ghost" data-go="discover">Find competition</button></div>' +
+          "</div></div></div>";
+      }
 
-        '<h2 class="sec">Highest-leverage deficits</h2><div class="card">' + deficits + "</div>" +
-        '<h2 class="sec">Your wedge</h2><div class="card">' + surplus + "</div>";
+      var defs = (d.top_deficits || []).map(function (r, i) {
+        return '<div class="action"><div class="n">' + (i + 1) + "</div><div>" +
+          "<p><strong>" + esc(r.label) + '</strong> · <span class="pill def">' +
+          pct(r.pct) + "</span></p>" +
+          '<p class="sub">' + esc(r.action || "") + "</p></div></div>";
+      }).join("") || '<p class="empty">No deficits — or no peer set yet.</p>';
+
+      var surp = (d.top_surpluses || []).map(function (r) {
+        return '<div class="action"><div class="n">★</div><div>' +
+          "<p><strong>" + esc(r.label) + '</strong> · <span class="pill sur">' +
+          pct(r.pct) + "</span></p>" +
+          '<p class="sub">This is your wedge — over-invest here before fixing anything else.</p></div></div>';
+      }).join("") || '<p class="empty">No surplus yet.</p>';
+
+      return demoBanner(d.demo) +
+        '<div class="page-head"><h1>' + esc(a.name || "Your artist") + "</h1><p>" +
+        esc([a.city, a.country].filter(Boolean).join(", ")) +
+        (a.subgenre ? " · " + esc(a.subgenre) : "") +
+        (a.tier ? " · " + esc(a.tier) + " tier" : "") +
+        (d.last_sync ? " · synced " + esc(d.last_sync) : "") + "</p></div>" +
+        '<div class="grid g4">' +
+          stat("Monthly listeners", metricVal("monthly_listeners", m.monthly_listeners), "manual — Spotify for Artists") +
+          stat("Boomplay streams", metricVal("boomplay_streams", m.boomplay_streams), "auto — synced") +
+          stat("DJ spins (30d)", metricVal("dj_spins_30d", m.dj_spins_30d), "manual — fieldwork") +
+          stat("Platforms linked", String(linked), linked ? "syncing" : "none yet") +
+        "</div>" +
+        '<div class="grid g3" style="margin-top:14px">' +
+          '<div class="card"><div class="health"><div class="ring" style="--p:' + d.health +
+            '"><b>' + d.health + '%</b></div><div class="stat"><span class="k">Competitive health</span>' +
+            '<span class="s">Dimensions at or above the peer median.</span></div></div></div>' +
+          '<div class="card"><div class="stat"><span class="k">Peer set</span><span class="v">' +
+            c.peers + '</span><span class="s">of ' + c.competitors +
+            " tracked acts match your tier + subgenre</span></div></div>" +
+          '<div class="card"><div class="stat"><span class="k">Radar going cold</span><span class="v ' +
+            (c.cold ? "bad" : "ok") + '">' + c.cold + '</span><span class="s">of ' + c.radar +
+            " contacts untouched 30+ days</span></div></div>" +
+        "</div>" +
+        '<h2 class="sec">Highest-leverage deficits</h2><div class="card">' + defs + "</div>" +
+        '<h2 class="sec">Your wedge</h2><div class="card">' + surp + "</div>";
     });
   };
 
-  function card_stat(k, v, s) {
-    return '<div class="card"><div class="stat"><span class="k">' + esc(k) + "</span>" +
-      '<span class="v">' + v + '</span><span class="s">' + esc(s) + "</span></div></div>";
+  function stat(k, v, s) {
+    return '<div class="card"><div class="stat"><span class="k">' + esc(k) +
+      '</span><span class="v">' + v + '</span><span class="s">' + esc(s) + "</span></div></div>";
   }
+
+  views.connect = function () {
+    return api("/links").then(function (d) {
+      var keys = Object.keys(d.links || {});
+      var rows = keys.map(function (k) {
+        var l = d.links[k];
+        return '<div class="linkrow"><span class="plat">' + esc(l.label || k) + "</span>" +
+          '<span class="id">' + esc(l.id) + "</span>" +
+          '<span class="pill ' + (l.syncable ? "sur" : "par") + '">' +
+            (l.syncable ? "syncable" : "no API") + "</span>" +
+          '<button class="ghost sm danger" data-unlink="' + esc(k) + '">Remove</button></div>';
+      }).join("") || '<p class="empty">No platforms linked yet.</p>';
+
+      return demoBanner(d.demo) +
+        '<div class="page-head"><h1>Connect platforms</h1>' +
+        "<p>Paste your artist page links — one per line. We work out the IDs.</p></div>" +
+        '<div class="card"><div class="field">' +
+          "<label>Artist links</label>" +
+          '<textarea id="urls" rows="5" placeholder="https://open.spotify.com/artist/...&#10;' +
+            'https://www.boomplay.com/artists/...&#10;https://youtube.com/@yourhandle"></textarea>' +
+          '<div class="hint">Supported: Spotify, Boomplay, YouTube, Last.fm, Audiomack, MusicBrainz.</div>' +
+        "</div>" +
+        '<div class="toolbar"><button class="btn" id="save-links">Save links</button>' +
+        '<button class="ghost" id="do-sync">Sync stats now</button>' +
+        (d.last_sync ? '<span class="tiny">Last synced ' + esc(d.last_sync) + "</span>" : "") +
+        "</div></div>" +
+        '<h2 class="sec">Linked platforms</h2><div class="card">' + rows + "</div>" +
+        '<div id="sync-out"></div>';
+    });
+  };
+
+  views.discover = function () {
+    return api("/discover").then(function (d) {
+      if (d.reason) {
+        return '<div class="page-head"><h1>Find my competition</h1></div>' +
+          '<div class="note bad">' + esc(d.reason) + "</div>" +
+          '<button class="btn" data-go="connect">Connect platforms</button>';
+      }
+      var rows = d.suggestions.map(function (s) {
+        return '<div class="sugg"><div class="score">' + Math.round(s.score) + "</div>" +
+          '<div class="info"><strong>' + esc(s.name) + " " + tierPill(s.tier) + "</strong>" +
+          "<span>" + esc([s.city, s.country].filter(Boolean).join(", ")) + " · " +
+          esc(s.why) + "</span></div>" +
+          '<button class="ghost sm" data-accept="' + esc(s.name) + '">Track</button></div>';
+      }).join("");
+
+      return '<div class="page-head"><h1>Find my competition</h1>' +
+        "<p>Acts in <strong>" + esc(d.subgenre) + "</strong> at the <strong>" +
+        esc(d.tier) + "</strong> tier, ranked by how close a benchmark they are to you.</p></div>" +
+        '<div class="note info">Scores favour acts closest to your listener count and in your ' +
+        "target markets. <strong>These are a shortlist to verify</strong>, not verified chart " +
+        "data — confirm each act before trusting the comparison.</div>" +
+        '<div class="toolbar"><button class="btn" id="accept-all">Track all shown</button></div>' +
+        '<div class="card">' + (rows || '<p class="empty">No matches.</p>') + "</div>" +
+        (d.rejected && d.rejected.length ?
+          '<h2 class="sec">Filtered out (' + d.rejected.length + ")</h2>" +
+          '<div class="card"><div class="tbl-wrap"><table><tbody>' +
+          d.rejected.map(function (r) {
+            return "<tr><td>" + esc(r.name) + '</td><td style="color:var(--mut)">' +
+              esc(r.why) + "</td></tr>"; }).join("") +
+          "</tbody></table></div></div>" : "");
+    });
+  };
 
   views.gaps = function () {
     return api("/gaps").then(function (d) {
       if (!d.peer_count) {
-        return '<div class="page-head"><h1>Gap Analysis</h1></div>' +
-          '<div class="note bad"><strong>No tier- and subgenre-matched peers.</strong> ' +
-          "Benchmarking against acts in a different tier or subgenre produces " +
-          "misleading numbers, so nothing is shown. Add matching competitors first.</div>";
+        return demoBanner(d.demo) + '<div class="page-head"><h1>Gap analysis</h1></div>' +
+          '<div class="note bad"><strong>No tier- and subgenre-matched peers yet.</strong> ' +
+          "Comparing against acts in a different tier or subgenre produces misleading " +
+          "numbers, so nothing is shown.</div>" +
+          '<button class="btn" data-go="discover">Find my competition</button>';
       }
       var rows = d.rows.map(function (r) {
         var cls = r.read === "deficit" ? "def" : r.read === "surplus" ? "sur" : "par";
         var bars = "";
         if (r.median != null && r.best) {
           var scale = Math.max(r.ours || 0, r.median, r.best) || 1;
-          bars = '<div class="cmp">' +
-            '<div class="lbl"><span>you</span><span>' + metricVal(r.key, r.ours) + "</span></div>" +
-            '<div class="bar"><i class="ours" style="width:' + ((r.ours || 0) / scale * 100) + '%"></i></div>' +
-            '<div class="lbl"><span>peer median</span><span>' + metricVal(r.key, r.median) + "</span></div>" +
-            '<div class="bar"><i class="med" style="width:' + (r.median / scale * 100) + '%"></i></div>' +
-            "</div>";
+          bars = '<div class="cmp"><div class="lbl"><span>you</span><span>' +
+            metricVal(r.key, r.ours) + '</span></div><div class="bar"><i class="ours" style="width:' +
+            ((r.ours || 0) / scale * 100) + '%"></i></div>' +
+            '<div class="lbl"><span>peer median</span><span>' + metricVal(r.key, r.median) +
+            '</span></div><div class="bar"><i class="med" style="width:' +
+            (r.median / scale * 100) + '%"></i></div></div>';
         }
         return "<tr><td><strong>" + esc(r.label) + "</strong>" +
           (d.manual_only[r.key] ? '<br><span class="pill par" style="margin-top:4px">manual</span>' : "") +
@@ -142,74 +280,73 @@
           (r.pct == null ? "—" : '<span class="pill ' + cls + '">' + pct(r.pct) + "</span>") +
           "</td><td>" + esc(r.action || "") + "</td></tr>";
       }).join("");
-
-      return '<div class="page-head"><h1>Gap Analysis</h1>' +
-        "<p>" + esc(d.artist) + " vs the median of <strong>" + d.peer_count +
-        "</strong> tier- and subgenre-matched peers: " + esc(d.peers.join(", ")) + "</p></div>" +
-        '<div class="note info">Benchmarked against the peer <strong>median</strong>, never the ' +
-        "maximum — a single outlier should not set your targets. Acts outside your tier or " +
-        "subgenre are excluded entirely.</div>" +
-        '<div class="card pad0"><div class="tbl-wrap"><table><thead><tr>' +
-        "<th>Dimension</th><th>You vs peer median</th><th class=\"num\">Delta</th><th>Next action</th>" +
-        "</tr></thead><tbody>" + rows + "</tbody></table></div></div>";
+      return demoBanner(d.demo) +
+        '<div class="page-head"><h1>Gap analysis</h1><p>' + esc(d.artist) +
+        " vs the median of <strong>" + d.peer_count + "</strong> matched peers: " +
+        esc(d.peers.join(", ")) + "</p></div>" +
+        '<div class="note info">Measured against the peer <strong>median</strong>, never the ' +
+        "maximum. Acts outside your tier or subgenre are excluded entirely.</div>" +
+        '<div class="card pad0"><div class="tbl-wrap"><table><thead><tr><th>Dimension</th>' +
+        '<th>You vs peer median</th><th class="num">Delta</th><th>Next action</th></tr></thead>' +
+        "<tbody>" + rows + "</tbody></table></div></div>";
     });
   };
 
   views.competitors = function () {
     return api("/competitors").then(function (d) {
       cache.meta = d;
-      var art = d.artist;
+      var art = d.artist || {};
       var rows = d.competitors.map(function (c) {
         var m = c.metrics || {};
-        var isPeer = c.subgenre === art.subgenre && c.tier === art.tier;
-        return "<tr><td><strong>" + esc(c.name) + "</strong><br>" +
-          '<span class="tiny">' + esc(c.city || "") + ", " + esc(c.country || "") + "</span></td>" +
-          "<td>" + esc(c.subgenre || "—") + "</td>" +
-          "<td>" + tierPill(c.tier) + "</td>" +
-          '<td class="num">' + metricVal("monthly_listeners", m.monthly_listeners) + "</td>" +
-          '<td class="num">' + metricVal("boomplay_streams", m.boomplay_streams) + "</td>" +
-          '<td class="num">' + metricVal("dj_spins_30d", m.dj_spins_30d) + "</td>" +
-          '<td><span class="pill ' + (isPeer ? "peer" : "tactics") + '">' +
-            (isPeer ? "peer" : "tactics only") + "</span></td>" +
-          '<td><div class="row-actions">' +
-          '<button class="ghost sm danger" data-del="' + esc(c.name) + '">Remove</button>' +
-          "</div></td></tr>";
+        var peer = c.subgenre === art.subgenre && c.tier === art.tier;
+        return "<tr><td><strong>" + esc(c.name) + '</strong><br><span class="tiny">' +
+          esc([c.city, c.country].filter(Boolean).join(", ")) + "</span></td><td>" +
+          esc(c.subgenre || "—") + "</td><td>" + tierPill(c.tier) + '</td><td class="num">' +
+          metricVal("monthly_listeners", m.monthly_listeners) + '</td><td class="num">' +
+          metricVal("boomplay_streams", m.boomplay_streams) + '</td><td class="num">' +
+          metricVal("dj_spins_30d", m.dj_spins_30d) + '</td><td><span class="pill ' +
+          (peer ? "peer" : "tactics") + '">' + (peer ? "peer" : "tactics only") +
+          '</span></td><td><button class="ghost sm danger" data-del="' + esc(c.name) +
+          '">Remove</button></td></tr>';
       }).join("");
-
-      return '<div class="page-head"><h1>Competitor Matrix</h1>' +
-        "<p>Only acts matching <strong>" + esc(art.subgenre) + "</strong> and the <strong>" +
-        esc(art.tier) + "</strong> tier count as peers in the gap analysis.</p></div>" +
+      return demoBanner(d.demo) +
+        '<div class="page-head"><h1>Competitor matrix</h1><p>Only acts matching <strong>' +
+        esc(art.subgenre || "your subgenre") + "</strong> and the <strong>" +
+        esc(art.tier || "your") + "</strong> tier count as peers.</p></div>" +
         '<div class="toolbar"><button class="btn" id="add">+ Add competitor</button>' +
-        '<div class="spacer"></div></div>' +
-        '<div class="card pad0"><div class="tbl-wrap"><table><thead><tr>' +
-        "<th>Act</th><th>Subgenre</th><th>Tier</th><th class=\"num\">Listeners</th>" +
-        "<th class=\"num\">Boomplay</th><th class=\"num\">DJ spins</th><th>Role</th><th></th>" +
-        "</tr></thead><tbody>" + (rows || '<tr><td colspan="8" class="empty">No competitors yet.</td></tr>') +
+        '<button class="ghost" data-go="discover">Find my competition</button></div>' +
+        '<div class="card pad0"><div class="tbl-wrap"><table><thead><tr><th>Act</th>' +
+        '<th>Subgenre</th><th>Tier</th><th class="num">Listeners</th><th class="num">Boomplay</th>' +
+        '<th class="num">DJ spins</th><th>Role</th><th></th></tr></thead><tbody>' +
+        (rows || '<tr><td colspan="8" class="empty">No competitors yet.</td></tr>') +
         "</tbody></table></div></div>";
     });
   };
 
   views.radar = function () {
     return api("/radar").then(function (d) {
+      if (!d.contacts.length) {
+        return demoBanner(d.demo) + '<div class="page-head"><h1>DJ &amp; radio radar</h1></div>' +
+          '<div class="note">Your radar is empty. It tracks FM stations, club DJs, ' +
+          "tastemakers and promo networks across Kampala, Nairobi and Dar es Salaam.</div>";
+      }
       var byCity = {};
-      d.contacts.forEach(function (c) { (byCity[c.city || "Other"] = byCity[c.city || "Other"] || []).push(c); });
-      var html = '<div class="page-head"><h1>DJ &amp; Radio Radar</h1>' +
-        "<p>Contact CRM for Kampala, Nairobi and Dar es Salaam. No contact is approached " +
-        "twice without an outcome logged.</p></div>";
+      d.contacts.forEach(function (c) {
+        (byCity[c.city || "Other"] = byCity[c.city || "Other"] || []).push(c);
+      });
+      var html = demoBanner(d.demo) + '<div class="page-head"><h1>DJ &amp; radio radar</h1>' +
+        "<p>No contact is approached twice without an outcome logged.</p></div>";
       Object.keys(byCity).sort().forEach(function (city) {
-        var rows = byCity[city].map(function (c) {
-          var cold = (c.days || 0) > 30;
-          return "<tr><td><strong>" + esc(c.name) + "</strong></td>" +
-            "<td>" + esc(c.class) + "</td><td>" + esc(c.genre_lean || "") + "</td>" +
-            "<td>" + esc(c.submission_route || "") + "</td>" +
-            '<td class="num">' + (c.days == null ? "—" : c.days + "d") +
-            (cold ? ' <span class="pill warn">cold</span>' : "") + "</td>" +
-            "<td>" + esc(c.outcome || "") + "</td></tr>";
-        }).join("");
         html += '<h2 class="sec">' + esc(city) + '</h2><div class="card pad0"><div class="tbl-wrap">' +
           "<table><thead><tr><th>Contact</th><th>Class</th><th>Genre</th><th>Route</th>" +
-          "<th class=\"num\">Last</th><th>Outcome</th></tr></thead><tbody>" + rows +
-          "</tbody></table></div></div>";
+          '<th class="num">Last</th><th>Outcome</th></tr></thead><tbody>' +
+          byCity[city].map(function (c) {
+            return "<tr><td><strong>" + esc(c.name) + "</strong></td><td>" + esc(c.class) +
+              "</td><td>" + esc(c.genre_lean || "") + "</td><td>" + esc(c.submission_route || "") +
+              '</td><td class="num">' + (c.days == null ? "—" : c.days + "d") +
+              ((c.days || 0) > 30 ? ' <span class="pill warn">cold</span>' : "") +
+              "</td><td>" + esc(c.outcome || "") + "</td></tr>";
+          }).join("") + "</tbody></table></div></div>";
       });
       return html;
     });
@@ -218,171 +355,253 @@
   views.swipe = function () {
     return api("/swipe").then(function (d) {
       var items = d.entries.map(function (e) {
-        return '<div class="swipe-item"><h4>' + esc(e.source) + " &middot; " + esc(e.channel) + "</h4>" +
-          '<div class="meta">' + esc(e.date) + " &middot; " + esc(e.format || "") +
-          " &middot; " + esc(e.metrics || "") + "</div>" +
-          "<div>" + esc(e.hook || "") + "</div>" +
-          '<div class="prin">→ ' + esc(e.principle || "") + "</div></div>";
-      }).join("") || '<p class="empty">No entries.</p>';
-      return '<div class="page-head"><h1>Swipe File</h1>' +
-        "<p>Real campaigns worth stealing the mechanism from. Every entry must carry a " +
-        "transferable principle — otherwise it is decoration.</p></div>" +
-        '<div class="card">' + items + "</div>";
+        return '<div class="swipe-item"><h4>' + esc(e.source) + " · " + esc(e.channel) +
+          '</h4><div class="meta">' + esc(e.date) + " · " + esc(e.format || "") + " · " +
+          esc(e.metrics || "") + "</div><div>" + esc(e.hook || "") +
+          '</div><div class="prin">→ ' + esc(e.principle || "") + "</div></div>";
+      }).join("") || '<p class="empty">No entries yet.</p>';
+      return demoBanner(d.demo) + '<div class="page-head"><h1>Swipe file</h1>' +
+        "<p>Campaigns worth stealing the mechanism from. Every entry needs a transferable " +
+        "principle.</p></div><div class=\"card\">" + items + "</div>";
     });
   };
 
   views.sources = function () {
     return api("/providers").then(function (d) {
       var rows = d.providers.map(function (p) {
-        return "<tr><td><strong>" + esc(p.name) + "</strong></td>" +
-          "<td>" + (p.ready ? '<span class="pill sur">ready</span>'
-            : '<span class="pill par">needs ' + esc(p.missing.join(", ")) + "</span>") + "</td>" +
-          "<td>" + p.metrics.map(function (m) { return "<code>" + esc(m) + "</code>"; }).join(" ") + "</td>" +
-          "<td>" + esc(p.note) + "</td></tr>";
+        return "<tr><td><strong>" + esc(p.name) + "</strong></td><td>" +
+          (p.ready ? '<span class="pill sur">ready</span>'
+                   : '<span class="pill par">needs ' + esc(p.missing.join(", ")) + "</span>") +
+          "</td><td>" + p.metrics.map(function (m) {
+            return "<code>" + esc(m) + "</code>"; }).join(" ") +
+          "</td><td>" + esc(p.note) + "</td></tr>";
       }).join("");
       var manual = Object.keys(d.manual_only).map(function (k) {
         return "<tr><td><code>" + esc(k) + "</code></td><td>" + esc(d.manual_only[k]) + "</td></tr>";
       }).join("");
-      return '<div class="page-head"><h1>Data Sources</h1>' +
+      return '<div class="page-head"><h1>Data sources</h1>' +
         "<p>What updates itself, and what will always need a human.</p></div>" +
         '<div class="note bad"><strong>Spotify monthly listeners are not available from any ' +
-        "official API.</strong> Extended quota requires 250,000+ monthly active users, which " +
-        "rules out independent artists. Chartmeter refuses to auto-write this field rather than " +
-        "scrape it — enter it from Spotify for Artists.</div>" +
-        '<h2 class="sec">Automated providers</h2>' +
-        '<div class="card pad0"><div class="tbl-wrap"><table><thead><tr><th>Provider</th>' +
-        "<th>Status</th><th>Fills</th><th>Notes</th></tr></thead><tbody>" + rows +
-        "</tbody></table></div></div>" +
-        '<h2 class="sec">Manual by design</h2>' +
-        '<div class="note">These are the highest-signal metrics in this market and no platform ' +
-        "will ever hand them to you. The automation exists to clear the boring numbers so your " +
-        "time goes to this fieldwork.</div>" +
+        "official API.</strong> Extended access requires 250,000+ monthly active users, which " +
+        "excludes independent artists. We never fake or scrape this — enter it from Spotify " +
+        "for Artists.</div>" +
+        '<h2 class="sec">Automated providers</h2><div class="card pad0"><div class="tbl-wrap">' +
+        "<table><thead><tr><th>Provider</th><th>Status</th><th>Fills</th><th>Notes</th></tr>" +
+        "</thead><tbody>" + rows + "</tbody></table></div></div>" +
+        '<h2 class="sec">Manual by design</h2><div class="note">These are the highest-signal ' +
+        "metrics in this market, and no platform will ever hand them to you.</div>" +
         '<div class="card pad0"><div class="tbl-wrap"><table><thead><tr><th>Metric</th>' +
-        "<th>Where it comes from</th></tr></thead><tbody>" + manual + "</tbody></table></div></div>";
+        "<th>Where it comes from</th></tr></thead><tbody>" + manual +
+        "</tbody></table></div></div>";
     });
   };
 
-  // ---------------------------------------------------------------- add form
+  // ------------------------------------------------------------- add competitor
   function openAddForm(errors) {
     var meta = cache.meta || { metrics: [], artist: {} };
     var art = meta.artist || {};
     modalTitle.textContent = "Add competitor";
-    var metricFields = meta.metrics.map(function (m) {
-      return '<div class="field"><label>' + esc(m.label) + "</label>" +
-        '<input name="m_' + esc(m.key) + '" type="number" step="any" placeholder="—"></div>';
-    }).join("");
-
-    modalBody.innerHTML =
-      (errors ? '<div class="errs"><strong>Could not save:</strong><ul>' +
-        errors.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + "</ul></div>" : "") +
-      '<form id="cform">' +
-        '<div class="form-grid">' +
-          '<div class="field"><label>Name *</label><input name="name" required></div>' +
-          '<div class="field"><label>Subgenre</label><input name="subgenre" value="' +
-            esc(art.subgenre || "") + '"><div class="hint">Must match ' +
-            esc(art.subgenre || "your artist") + " to count as a peer.</div></div>" +
-          '<div class="field"><label>City</label><input name="city"></div>' +
-          '<div class="field"><label>Country</label><select name="country">' +
-            ["UG", "KE", "TZ", "RW", "Other"].map(function (c) {
-              return '<option value="' + c + '">' + c + "</option>"; }).join("") +
-          "</select></div>" +
-          '<div class="field"><label>Tier</label><select name="tier">' +
-            '<option value="">auto from listeners</option>' +
-            '<option value="upcoming">Upcoming (0–20k)</option>' +
-            '<option value="mid">Mid-level (20k–500k)</option>' +
-            '<option value="aspirational">Aspirational (500k+)</option>' +
-          "</select></div>" +
-          '<div class="field"><label>Last audited</label><input name="last_audit" type="date"></div>' +
-        "</div>" +
-        '<h2 class="sec">Metrics</h2><div class="form-grid">' + metricFields + "</div>" +
-        '<h2 class="sec">SWOT</h2>' +
-        '<div class="field"><label>Visual hooks</label><input name="visual_hooks"></div>' +
-        '<div class="field"><label>Performance loop</label><input name="performance_loop"></div>' +
-        '<div class="field"><label>Engagement drop-off</label><input name="dropoff"></div>' +
-        '<div class="toolbar" style="margin-top:18px"><button class="btn" type="submit">Save competitor</button>' +
-        '<button class="ghost" type="button" id="cancel">Cancel</button></div>' +
-      "</form>";
-
+    modalBody.innerHTML = (errors ? errBox(errors) : "") +
+      '<form id="cform"><div class="form-grid">' +
+        '<div class="field"><label>Name *</label><input name="name" required></div>' +
+        '<div class="field"><label>Subgenre</label><input name="subgenre" value="' +
+          esc(art.subgenre || "") + '"><div class="hint">Must match yours to count as a peer.</div></div>' +
+        '<div class="field"><label>City</label><input name="city"></div>' +
+        '<div class="field"><label>Country</label><select name="country">' +
+          ["UG", "KE", "TZ", "RW", "Other"].map(function (c) {
+            return "<option>" + c + "</option>"; }).join("") + "</select></div>" +
+        '<div class="field"><label>Tier</label><select name="tier">' +
+          '<option value="">auto from listeners</option>' +
+          '<option value="upcoming">Upcoming (0–20k)</option>' +
+          '<option value="mid">Mid-level (20k–500k)</option>' +
+          '<option value="aspirational">Aspirational (500k+)</option></select></div>' +
+      "</div>" +
+      '<h2 class="sec">Metrics</h2><div class="form-grid">' +
+      meta.metrics.map(function (m) {
+        return '<div class="field"><label>' + esc(m.label) + '</label><input name="m_' +
+          esc(m.key) + '" type="number" step="any"></div>';
+      }).join("") + "</div>" +
+      '<h2 class="sec">SWOT</h2>' +
+      '<div class="field"><label>Visual hooks</label><input name="visual_hooks"></div>' +
+      '<div class="field"><label>Performance loop</label><input name="performance_loop"></div>' +
+      '<div class="field"><label>Engagement drop-off</label><input name="dropoff"></div>' +
+      '<div class="toolbar" style="margin-top:16px"><button class="btn" type="submit">Save</button>' +
+      '<button class="ghost" type="button" id="cancel">Cancel</button></div></form>';
     modal.hidden = false;
     document.getElementById("cancel").onclick = closeModal;
     document.getElementById("cform").onsubmit = function (ev) {
       ev.preventDefault();
-      var fd = new FormData(ev.target), payload = { metrics: {} };
-      fd.forEach(function (v, k) {
+      var payload = { metrics: {} };
+      new FormData(ev.target).forEach(function (v, k) {
         if (k.indexOf("m_") === 0) { if (v !== "") payload.metrics[k.slice(2)] = v; }
         else payload[k] = v;
       });
-      api("/competitors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }).then(function () {
-        closeModal();
-        toast("Added " + payload.name);
+      post("/competitors", payload).then(function () {
+        closeModal(); toast("Added " + payload.name); render();
+      }).catch(function (e) { openAddForm((e && e.errors) || ["Unexpected error."]); });
+    };
+  }
+
+  // ------------------------------------------------------------- render + wiring
+  function render() {
+    main.innerHTML = '<div class="loading">Loading…</div>';
+    views[view]().then(function (html) {
+      main.innerHTML = html;
+      wire();
+    }).catch(function (e) {
+      main.innerHTML = '<div class="note bad">Failed to load. ' +
+        esc((e && (e.error || e.message)) || e) + "</div>";
+    });
+  }
+
+  function wire() {
+    var add = document.getElementById("add");
+    if (add) add.onclick = function () { openAddForm(); };
+
+    main.querySelectorAll("[data-go]").forEach(function (b) {
+      b.onclick = function () { view = b.getAttribute("data-go"); syncNav(); render(); };
+    });
+    main.querySelectorAll("[data-auth]").forEach(function (b) {
+      b.onclick = function () { openAuth(b.getAttribute("data-auth")); };
+    });
+    main.querySelectorAll("[data-del]").forEach(function (b) {
+      b.onclick = function () {
+        var n = b.getAttribute("data-del");
+        if (!confirm("Remove " + n + "?")) return;
+        api("/competitors/" + encodeURIComponent(n), { method: "DELETE" })
+          .then(function () { toast("Removed " + n); render(); })
+          .catch(function () { toast("Could not remove", true); });
+      };
+    });
+    main.querySelectorAll("[data-unlink]").forEach(function (b) {
+      b.onclick = function () {
+        post("/links/remove", { platform: b.getAttribute("data-unlink") })
+          .then(function () { toast("Link removed"); render(); });
+      };
+    });
+    main.querySelectorAll("[data-accept]").forEach(function (b) {
+      b.onclick = function () {
+        post("/discover/accept", { names: [b.getAttribute("data-accept")] })
+          .then(function (r) {
+            toast(r.added.length ? "Now tracking " + r.added.join(", ") : "Already tracked");
+            render();
+          });
+      };
+    });
+    var all = document.getElementById("accept-all");
+    if (all) all.onclick = function () {
+      var names = Array.prototype.map.call(
+        main.querySelectorAll("[data-accept]"),
+        function (x) { return x.getAttribute("data-accept"); });
+      post("/discover/accept", { names: names }).then(function (r) {
+        toast("Now tracking " + r.added.length + " acts");
+        view = "gaps"; syncNav(); render();
+      });
+    };
+
+    var save = document.getElementById("save-links");
+    if (save) save.onclick = function () {
+      var text = document.getElementById("urls").value;
+      if (!text.trim()) return toast("Paste at least one link", true);
+      post("/links", { text: text }).then(function (r) {
+        if (r.unknown && r.unknown.length) {
+          toast("Not recognised: " + r.unknown.join(", "), true);
+        } else {
+          toast("Saved " + r.added.length + " link(s)");
+        }
         render();
-      }).catch(function (err) {
-        openAddForm(err && err.errors ? err.errors : ["Unexpected error."]);
+      });
+    };
+
+    var sync = document.getElementById("do-sync");
+    if (sync) sync.onclick = function () {
+      sync.disabled = true; sync.textContent = "Syncing…";
+      post("/sync", {}).then(function (r) {
+        var out = document.getElementById("sync-out");
+        out.innerHTML = '<h2 class="sec">Sync results</h2><div class="card">' +
+          r.results.map(function (x) {
+            var cls = x.status === "ok" ? "sur" : x.status === "needs_key" ? "warn" : "def";
+            return '<div class="res"><span class="st"><span class="pill ' + cls + '">' +
+              esc(x.status) + '</span></span><span><strong>' + esc(x.label) +
+              "</strong> — " + esc(x.detail) + "</span></div>";
+          }).join("") + "</div>" +
+          '<div class="note">Manual metrics (monthly listeners, DJ spins, WhatsApp list, ' +
+          "radio adds) are never overwritten by a sync — no API provides them.</div>";
+        toast(Object.keys(r.metrics).length + " metric(s) updated");
+      }).catch(function (e) {
+        toast((e && e.errors && e.errors[0]) || "Sync failed", true);
+      }).then(function () {
+        sync.disabled = false; sync.textContent = "Sync stats now";
       });
     };
   }
 
-  function closeModal() { modal.hidden = true; modalBody.innerHTML = ""; }
-
-  // ---------------------------------------------------------------- wiring
-  function render() {
-    spinner();
-    views[view]().then(function (html) {
-      main.innerHTML = html;
-      main.scrollTop = 0;
-      var add = document.getElementById("add");
-      if (add) add.onclick = function () { openAddForm(); };
-      Array.prototype.forEach.call(main.querySelectorAll("[data-del]"), function (b) {
-        b.onclick = function () {
-          var name = b.getAttribute("data-del");
-          if (!confirm("Remove " + name + " from the matrix?")) return;
-          api("/competitors/" + encodeURIComponent(name), { method: "DELETE" })
-            .then(function () { toast("Removed " + name); render(); })
-            .catch(function () { toast("Could not remove", true); });
-        };
-      });
-    }).catch(function (e) {
-      main.innerHTML = '<div class="note bad">Failed to load. ' + esc(e && e.error || e) + "</div>";
+  function syncNav() {
+    document.querySelectorAll("#nav button").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-view") === view);
     });
+    location.hash = view;
+  }
+
+  function showApp() {
+    home.hidden = true;
+    appEl.hidden = false;
+    var who = document.getElementById("who");
+    var acct = document.getElementById("acct");
+    if (session.signed_in) {
+      who.textContent = session.user.artist_name || session.user.email;
+      acct.innerHTML = '<div class="acct-line"><strong>' + esc(session.user.email) +
+        '</strong></div><button class="ghost sm" id="logout" style="width:100%">Sign out</button>';
+      document.getElementById("logout").onclick = function () {
+        post("/auth/logout", {}).then(function () {
+          session = { signed_in: false, user: null };
+          showHome();
+        });
+      };
+    } else {
+      who.textContent = "Demo workspace";
+      acct.innerHTML = '<button class="btn sm" data-auth="signup" style="width:100%">' +
+        'Create account</button><button class="ghost sm" id="back-home" style="width:100%;' +
+        'margin-top:7px">Back to homepage</button>';
+      acct.querySelector("[data-auth]").onclick = function () { openAuth("signup"); };
+      document.getElementById("back-home").onclick = showHome;
+    }
+  }
+
+  function showHome() {
+    appEl.hidden = true;
+    home.hidden = false;
+    location.hash = "";
   }
 
   document.getElementById("nav").addEventListener("click", function (ev) {
     var b = ev.target.closest("button[data-view]");
     if (!b) return;
-    Array.prototype.forEach.call(this.querySelectorAll("button"), function (x) {
-      x.classList.toggle("active", x === b);
-    });
     view = b.getAttribute("data-view");
-    location.hash = view;
+    syncNav();
     render();
   });
-
   document.getElementById("modal-close").onclick = closeModal;
   modal.addEventListener("click", function (e) { if (e.target === modal) closeModal(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
-
-  document.getElementById("reset").onclick = function () {
-    if (!confirm("Reset all demo data back to the seed?")) return;
-    api("/reset", { method: "POST" }).then(function () {
-      toast("Demo data reset");
-      render();
-    });
+  home.querySelectorAll("[data-auth]").forEach(function (b) {
+    b.onclick = function () { openAuth(b.getAttribute("data-auth")); };
+  });
+  document.getElementById("try-demo").onclick = function () {
+    view = "overview"; syncNav(); showApp(); render();
   };
 
-  var h = (location.hash || "").replace("#", "");
-  if (views[h]) {
-    view = h;
-    var btn = document.querySelector('[data-view="' + h + '"]');
-    if (btn) {
-      Array.prototype.forEach.call(document.querySelectorAll("#nav button"), function (x) {
-        x.classList.remove("active");
-      });
-      btn.classList.add("active");
+  // boot
+  api("/auth/session").then(function (s) {
+    session = s;
+    var h = (location.hash || "").replace("#", "");
+    if (s.signed_in) {
+      if (views[h]) view = h;
+      syncNav(); showApp(); render();
+    } else if (views[h]) {
+      view = h; syncNav(); showApp(); render();
+    } else {
+      home.hidden = false;
     }
-  }
-  render();
+  }).catch(function () { home.hidden = false; });
 })();

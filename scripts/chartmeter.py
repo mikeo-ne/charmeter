@@ -70,10 +70,50 @@ VALID_CHANNELS = {"tiktok", "instagram", "whatsapp", "youtube", "radio"}
 
 # --------------------------------------------------------------------------- YAML subset
 
+def _split_flow(body: str):
+    """Split 'a: 1, b: {c: 2}' on top-level commas only."""
+    parts, depth, cur, quote = [], 0, "", None
+    for ch in body:
+        if quote:
+            cur += ch
+            if ch == quote:
+                quote = None
+            continue
+        if ch in "'\"":
+            quote = ch
+            cur += ch
+        elif ch in "{[":
+            depth += 1
+            cur += ch
+        elif ch in "}]":
+            depth -= 1
+            cur += ch
+        elif ch == "," and depth == 0:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        parts.append(cur)
+    return parts
+
+
 def _scalar(text: str):
     text = text.strip()
     if len(text) >= 2 and text[0] == text[-1] and text[0] in "'\"":
         return text[1:-1]
+    # Inline flow mapping: {a: 1, b: two}
+    if text.startswith("{") and text.endswith("}"):
+        out = {}
+        for part in _split_flow(text[1:-1]):
+            if ":" not in part:
+                continue
+            k, _, v = part.partition(":")
+            out[k.strip().strip("'\"")] = _scalar(v)
+        return out
+    # Inline flow sequence: [a, b, c]
+    if text.startswith("[") and text.endswith("]"):
+        return [_scalar(p) for p in _split_flow(text[1:-1]) if p.strip()]
     low = text.lower()
     if low in ("true", "false"):
         return low == "true"

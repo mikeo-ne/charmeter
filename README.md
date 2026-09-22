@@ -57,12 +57,20 @@ YAML subset parser so it runs anywhere).
 
 ## The web app
 
-An interactive client-facing app — dashboard, gap analysis, and an editable
-competitor matrix that enforces the tiering rules:
+A full product: marketing homepage, artist accounts, link-based stat sync, and
+competitor discovery.
 
 ```bash
 python3 scripts/server.py --port 3000    # then open http://localhost:3000
 ```
+
+- **Sign up / sign in** — each artist gets an isolated workspace (PBKDF2-hashed
+  passwords, HttpOnly session cookies).
+- **Connect platforms** — paste Spotify / Boomplay / YouTube / Last.fm / Audiomack /
+  MusicBrainz artist URLs; IDs are parsed automatically, then one click syncs stats.
+- **Find my competition** — suggests acts in your exact subgenre and career tier,
+  ranked by how close a benchmark they are, from `data/candidates.yml`.
+- **Explore the demo** — visitors get a sandboxed sample workspace without signing up.
 
 Stdlib only, no build step. Analysis is imported from `chartmeter.py`, so the web app
 and the CLI can never disagree. Demo edits go to a gitignored working copy

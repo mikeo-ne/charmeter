@@ -3,53 +3,146 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chartmeter — East Africa Music Intelligence</title>
-<meta name="description" content="Tier-matched competitor benchmarking and strategic gap analysis for East African independent music careers.">
+<title>Chartmeter — Know exactly who you're competing with</title>
+<meta name="description" content="Tier-matched competitor benchmarking for East African independent artists. Paste your platform links, sync your stats, see your real competition.">
 <link rel="stylesheet" href="app.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📊</text></svg>">
 </head>
 <body>
-<div class="app">
 
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="mark">CM</span>
-      <div>
-        <strong>Chartmeter</strong>
-        <small>East Africa Intelligence Hub</small>
+<!-- ============================= MARKETING HOME ============================= -->
+<div id="home" hidden>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <div class="brand"><span class="mark">CM</span>
+        <div><strong>Chartmeter</strong><small>East Africa Intelligence</small></div>
+      </div>
+      <div class="nav-actions">
+        <button class="ghost" data-auth="login">Sign in</button>
+        <button class="btn" data-auth="signup">Create account</button>
       </div>
     </div>
+  </header>
 
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">For independent artists in Uganda, Kenya &amp; Tanzania</span>
+      <h1>Know exactly who you're<br>actually competing with.</h1>
+      <p class="lede">
+        Paste your Spotify, Boomplay and YouTube links. Chartmeter syncs your numbers,
+        finds artists in <em>your</em> subgenre at <em>your</em> career stage, and shows
+        you the gaps worth closing this month.
+      </p>
+      <div class="hero-cta">
+        <button class="btn lg" data-auth="signup">Create your free account</button>
+        <button class="ghost lg" id="try-demo">Explore the demo first</button>
+      </div>
+      <p class="micro">No card. Your data stays in your own workspace.</p>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="steps">
+      <div class="step">
+        <span class="n">1</span>
+        <h3>Paste your links</h3>
+        <p>Drop in your artist URLs from Spotify, Boomplay, YouTube, Last.fm or
+        Audiomack. We work out the IDs — nothing to configure.</p>
+      </div>
+      <div class="step">
+        <span class="n">2</span>
+        <h3>Sync your stats</h3>
+        <p>One click pulls Boomplay streams, YouTube subscribers and more into your
+        baseline, so you stop typing numbers into spreadsheets.</p>
+      </div>
+      <div class="step">
+        <span class="n">3</span>
+        <h3>See your real competition</h3>
+        <p>We shortlist artists in your exact subgenre and career tier — then rank
+        the gaps between you and them by what to fix first.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <h2 class="h2">Built to stop you measuring yourself against the wrong people</h2>
+    <div class="feat">
+      <div class="card">
+        <h3>Tier-matched, always</h3>
+        <p>An artist at 7,000 listeners is never benchmarked against one at 145,000.
+        Chartmeter splits Upcoming (0–20k) from Mid-level (20k–500k) and refuses to
+        mix them.</p>
+      </div>
+      <div class="card">
+        <h3>Same subgenre only</h3>
+        <p>Luganda pop is compared to Luganda pop. Amapiano acts are marked
+        <em>tactics only</em> — useful to learn from, excluded from your numbers.</p>
+      </div>
+      <div class="card">
+        <h3>Median, not maximum</h3>
+        <p>You're measured against the middle of your peer set, not its best act.
+        One outlier should never set your targets.</p>
+      </div>
+      <div class="card">
+        <h3>Every gap has an action</h3>
+        <p>"DJ spins 33% below peers" comes with the seeding workflow to fix it —
+        not just a red number on a chart.</p>
+      </div>
+      <div class="card">
+        <h3>Honest about the data</h3>
+        <p>Spotify doesn't expose monthly listeners to anyone without 250k+ users.
+        We tell you that, and never fake it, rather than scraping numbers that break.</p>
+      </div>
+      <div class="card">
+        <h3>The regional reality</h3>
+        <p>DJ rotation, WhatsApp broadcast lists and radio adds are tracked as
+        first-class metrics, because in this market they move more than playlists.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap band">
+    <div class="cta-box">
+      <h2>See your gaps in about five minutes.</h2>
+      <p>Create an account, paste two links, and get a ranked list of what to fix.</p>
+      <button class="btn lg" data-auth="signup">Create your free account</button>
+    </div>
+  </section>
+
+  <footer class="foot"><div class="wrap">
+    Chartmeter — visual qualitative research &amp; market mapping for East African music.
+  </div></footer>
+</div>
+
+<!-- ================================ APP ==================================== -->
+<div id="app" class="app" hidden>
+  <aside class="sidebar">
+    <div class="brand"><span class="mark">CM</span>
+      <div><strong>Chartmeter</strong><small id="who">East Africa Intelligence</small></div>
+    </div>
     <nav id="nav">
       <button data-view="overview" class="active"><span>◈</span> Overview</button>
-      <button data-view="gaps"><span>◆</span> Gap Analysis</button>
-      <button data-view="competitors"><span>◇</span> Competitor Matrix</button>
-      <button data-view="radar"><span>◉</span> DJ &amp; Radio Radar</button>
-      <button data-view="swipe"><span>❏</span> Swipe File</button>
-      <button data-view="sources"><span>⇄</span> Data Sources</button>
+      <button data-view="connect"><span>⇄</span> Connect platforms</button>
+      <button data-view="discover"><span>✦</span> Find my competition</button>
+      <button data-view="gaps"><span>◆</span> Gap analysis</button>
+      <button data-view="competitors"><span>◇</span> Competitor matrix</button>
+      <button data-view="radar"><span>◉</span> DJ &amp; radio radar</button>
+      <button data-view="swipe"><span>❏</span> Swipe file</button>
+      <button data-view="sources"><span>⇡</span> Data sources</button>
     </nav>
-
     <div class="side-foot">
-      <button id="reset" class="ghost sm">Reset demo data</button>
-      <p class="tiny">Edits are sandboxed to a working copy. The repo's
-      <code>data/*.yml</code> is never modified.</p>
+      <div id="acct"></div>
     </div>
   </aside>
-
-  <main id="main">
-    <div class="loading">Loading…</div>
-  </main>
-
+  <main id="main"><div class="loading">Loading…</div></main>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <div id="modal" class="modal" hidden>
   <div class="modal-card">
-    <div class="modal-head">
-      <h3 id="modal-title">Add competitor</h3>
-      <button id="modal-close" class="ghost sm">✕</button>
-    </div>
+    <div class="modal-head"><h3 id="modal-title"></h3>
+      <button id="modal-close" class="ghost sm">✕</button></div>
     <div id="modal-body"></div>
   </div>
 </div>

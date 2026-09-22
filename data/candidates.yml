@@ -1,0 +1,115 @@
+# Chartmeter - candidate directory for competitor discovery.
+#
+# Starter pool the "Find my competition" feature scores against. These are
+# ILLUSTRATIVE seed entries, not a live index or verified chart data - treat
+# every suggestion as a shortlist to verify, then confirm against the Phase 2
+# admission checklist in docs/02-tiered-filtering.md.
+#
+# Grow this file as you research. Same shape as data/competitors.yml, plus
+# optional `links` used to prefill platform sync when a suggestion is accepted.
+
+candidates:
+  - name: Kayz Muwonge
+    country: UG
+    city: Kampala
+    subgenre: luganda-pop
+    active_last_120d: true
+    metrics: {monthly_listeners: 11200, boomplay_streams: 240000, dj_spins_30d: 14}
+
+  - name: Zaituni
+    country: UG
+    city: Kampala
+    subgenre: luganda-pop
+    active_last_120d: true
+    metrics: {monthly_listeners: 8900, boomplay_streams: 195000, dj_spins_30d: 9}
+
+  - name: Brian Ssekanjako
+    country: UG
+    city: Entebbe
+    subgenre: luganda-pop
+    active_last_120d: true
+    metrics: {monthly_listeners: 5100, boomplay_streams: 88000, dj_spins_30d: 4}
+
+  - name: Ssanyu Nakato
+    country: UG
+    city: Kampala
+    subgenre: luganda-pop
+    active_last_120d: true
+    metrics: {monthly_listeners: 6800, boomplay_streams: 141000, dj_spins_30d: 7}
+
+  - name: Pius Kigozi
+    country: UG
+    city: Masaka
+    subgenre: luganda-pop
+    active_last_120d: true
+    metrics: {monthly_listeners: 13500, boomplay_streams: 262000, dj_spins_30d: 12}
+
+  - name: Winnie Nabatanzi
+    country: UG
+    city: Kampala
+    subgenre: luganda-pop
+    active_last_120d: false
+    metrics: {monthly_listeners: 9400, boomplay_streams: 173000, dj_spins_30d: 2}
+
+  - name: Ratu Mwangi
+    country: KE
+    city: Nairobi
+    subgenre: luganda-pop
+    active_last_120d: true
+    metrics: {monthly_listeners: 7900, boomplay_streams: 150000, dj_spins_30d: 8}
+
+  - name: Deejay Ntale
+    country: UG
+    city: Kampala
+    subgenre: ea-amapiano
+    active_last_120d: true
+    metrics: {monthly_listeners: 16400, boomplay_streams: 310000, dj_spins_30d: 21}
+
+  - name: Sipho Wanyama
+    country: UG
+    city: Kampala
+    subgenre: ea-amapiano
+    active_last_120d: true
+    metrics: {monthly_listeners: 12100, boomplay_streams: 228000, dj_spins_30d: 16}
+
+  - name: Neema Salehe
+    country: TZ
+    city: Dar es Salaam
+    subgenre: ea-amapiano
+    active_last_120d: true
+    metrics: {monthly_listeners: 18900, boomplay_streams: 402000, dj_spins_30d: 19}
+
+  - name: Mariam Kiwanuka
+    country: KE
+    city: Nairobi
+    subgenre: regional-afrobeats
+    active_last_120d: true
+    metrics: {monthly_listeners: 82000, boomplay_streams: 1900000, dj_spins_30d: 28}
+
+  - name: Juma Bakari
+    country: TZ
+    city: Dar es Salaam
+    subgenre: regional-afrobeats
+    active_last_120d: true
+    metrics: {monthly_listeners: 145000, boomplay_streams: 4200000, dj_spins_30d: 33}
+
+  - name: Timothy Oketch
+    country: UG
+    city: Kampala
+    subgenre: regional-afrobeats
+    active_last_120d: true
+    metrics: {monthly_listeners: 41000, boomplay_streams: 870000, dj_spins_30d: 22}
+
+  - name: Selina Achieng
+    country: KE
+    city: Kisumu
+    subgenre: gengetone
+    active_last_120d: true
+    metrics: {monthly_listeners: 9600, boomplay_streams: 188000, dj_spins_30d: 10}
+
+  - name: Rasta Mubiru
+    country: UG
+    city: Jinja
+    subgenre: dancehall-reggae
+    active_last_120d: true
+    metrics: {monthly_listeners: 7200, boomplay_streams: 134000, dj_spins_30d: 9}
