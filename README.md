@@ -53,6 +53,21 @@ python3 scripts/chartmeter.py report     # full markdown report -> stdout
 No third-party dependencies beyond Python 3.8+ (`scripts/chartmeter.py` ships a minimal
 YAML subset parser so it runs anywhere).
 
+## Site & deployment
+
+The whole hub renders to a static site — docs, templates, and a live report generated
+from `data/` at build time:
+
+```bash
+python3 scripts/build_site.py            # -> site/
+python3 -m http.server 3000 --directory site
+```
+
+The build is also dependency-free (`build_site.py` renders the Markdown subset this repo
+uses), so CI needs no install step. Pushes to `main` build and publish to GitHub Pages via
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml); enable it once under
+**Settings → Pages → Source: GitHub Actions**. `site/` is gitignored — it is a build artifact.
+
 ## Quick start
 
 1. Create the Are.na parent hub channel and sub-channels per `docs/01-arena-architecture.md`.
