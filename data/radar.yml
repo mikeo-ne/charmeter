@@ -1,0 +1,76 @@
+# Chartmeter - Media, DJ & Radio Radar
+# class: fm | dj | tastemaker | promo-network
+# Every entry must carry last_contact and outcome. No second contact without an outcome.
+
+contacts:
+  - name: Kampala Evening Drive
+    class: fm
+    city: Kampala
+    handle: presenter@example-fm.ug
+    genre_lean: luganda-pop
+    submission_route: Email WAV + 60-word bio, Mon-Wed only
+    last_contact: 2026-08-20
+    outcome: Added to evening rotation, 1 spin/day
+
+  - name: DJ Sekiwunga
+    class: dj
+    city: Kampala
+    handle: "@djsekiwunga"
+    genre_lean: luganda-pop
+    submission_route: WhatsApp voice note + Drive link, 320 MP3 + DJ intro
+    last_contact: 2026-09-02
+    outcome: Playing in Friday set at Kabalagala
+
+  - name: Mobile Crew Ssemakula Sounds
+    class: dj
+    city: Kampala
+    handle: "+256-700-000000"
+    genre_lean: kidandali
+    submission_route: USB drop at depot, or WeTransfer
+    last_contact: 2026-08-11
+    outcome: Included on August mixtape
+
+  - name: DJ Wanjiru
+    class: dj
+    city: Nairobi
+    handle: "@djwanjiru"
+    genre_lean: regional-afrobeats
+    submission_route: IG DM, warm intro required
+    last_contact: 2026-09-08
+    outcome: Requested instrumental for a blend
+
+  - name: Bongo Mix Sessions
+    class: tastemaker
+    city: Dar es Salaam
+    handle: youtube.com/@example-bongomix
+    genre_lean: bongo-flava
+    submission_route: Submission form, 2-week lead time
+    last_contact: 2026-08-30
+    outcome: Pending review
+
+  - name: Kampala Sound Blog
+    class: tastemaker
+    city: Kampala
+    handle: example-kampalasound.ug
+    genre_lean: luganda-pop
+    submission_route: Email, needs press photo pack + quote
+    last_contact: 2026-07-19
+    outcome: Published feature interview
+
+  - name: HYPush
+    class: promo-network
+    city: Kampala
+    handle: hypush-contact
+    genre_lean: multi
+    submission_route: Network pack submission, pooled DJ + blogger distribution
+    last_contact: 2026-09-10
+    outcome: Pack accepted, distribution scheduled for next release week
+
+  - name: Dar Club Circuit Collective
+    class: dj
+    city: Dar es Salaam
+    handle: "@darclubcircuit"
+    genre_lean: ea-amapiano
+    submission_route: Group WhatsApp pack, Sundays
+    last_contact: 2026-09-14
+    outcome: Two DJs confirmed testing the record

@@ -1,0 +1,44 @@
+# Chartmeter - Promotion & Marketing Swipe Files
+# Every entry needs a transferable principle. No principle -> delete the entry.
+# channel: tiktok | instagram | whatsapp | youtube | radio
+
+entries:
+  - source: Kayz Muwonge
+    channel: tiktok
+    date: 2026-08-22
+    hook: Stranger on a Kampala street is asked to finish the hook line; they nail it.
+    format: street-vox, 14s, no captions until 3s
+    metrics: 310k views, 8.1% save rate
+    principle: Let the audience perform the hook; proof of familiarity beats any claim of it.
+
+  - source: Juma Bakari
+    channel: tiktok
+    date: 2026-08-05
+    hook: Twenty creators post the same 6-count step on the same morning.
+    format: seeded dance challenge, day-one saturation
+    metrics: sound used 4.2k times in 14 days
+    principle: Simultaneity manufactures the feeling of a trend already in progress.
+
+  - source: Mariam Kiwanuka
+    channel: instagram
+    date: 2026-07-28
+    hook: Release-week radio tour cut into 12 vertical clips, one per day.
+    format: carousel + reels rollout from a single day of filming
+    metrics: 2.1x median reach for the cycle
+    principle: One shoot day should yield two weeks of assets; plan the edit before the shoot.
+
+  - source: Deejay Ntale
+    channel: whatsapp
+    date: 2026-09-06
+    hook: 22-second voice note to 1.4k fans - "put this on your status tonight, that's all".
+    format: segmented broadcast, one asset, one ask
+    metrics: ~380 status reposts in 24h
+    principle: A single tiny ask in a human voice outperforms a polished multi-CTA blast.
+
+  - source: Zaituni
+    channel: instagram
+    date: 2026-06-30
+    hook: Same stairwell, same framing, different song, every week.
+    format: fixed-set acoustic series
+    metrics: 3rd post onward outperforms first by 4x
+    principle: Visual repetition is compounding; recognisability is cheaper than production value.

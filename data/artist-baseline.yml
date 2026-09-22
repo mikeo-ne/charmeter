@@ -1,0 +1,36 @@
+# Chartmeter - Artist Baseline & Identity
+# Replace the example values with your target artist. Date every metric.
+
+name: Nsimbi
+country: UG
+city: Kampala
+subgenre: luganda-pop
+secondary_subgenres: ea-amapiano
+tier: upcoming
+arena_channel: CM / Baseline / Nsimbi
+epk_url: https://example.com/nsimbi-epk
+last_audit: 2026-09-01
+
+metrics:
+  monthly_listeners: 7400
+  boomplay_streams: 128000
+  shortform_posts_per_week: 3
+  shortform_median_views: 4200
+  dj_spins_30d: 6
+  radio_adds_30d: 1
+  editorial_playlist_adds_90d: 0
+  whatsapp_list_size: 310
+  live_shows_90d: 4
+  crossborder_listener_share: 0.11
+
+socials:
+  instagram: 9800
+  tiktok: 14200
+  youtube: 2600
+  x: 1100
+
+milestones:
+  - 2025-11-10 | Debut single released via independent distributor
+  - 2026-02-14 | First campus show, Makerere, ~400 attendance
+  - 2026-05-02 | Added to one Kampala FM evening rotation
+  - 2026-08-19 | First Nairobi DJ confirmed spinning the record

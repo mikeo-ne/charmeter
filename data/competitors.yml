@@ -1,0 +1,142 @@
+# Chartmeter - Regional Competitor Matrix
+# Admission checklist (docs/02-tiered-filtering.md) must pass before adding an entry.
+# tier: upcoming (0-20k) | mid (20k-500k) | aspirational (>500k, tactics only)
+
+competitors:
+  - name: Kayz Muwonge
+    country: UG
+    city: Kampala
+    subgenre: luganda-pop
+    tier: upcoming
+    active_last_120d: true
+    last_audit: 2026-09-01
+    arena_channel: CM / Competitors / Luganda Pop
+    metrics:
+      monthly_listeners: 11200
+      boomplay_streams: 240000
+      shortform_posts_per_week: 6
+      shortform_median_views: 22000
+      dj_spins_30d: 14
+      radio_adds_30d: 2
+      editorial_playlist_adds_90d: 1
+      whatsapp_list_size: 900
+      live_shows_90d: 9
+      crossborder_listener_share: 0.09
+    visual_hooks: Hand-painted taxi-stage lettering on every cover; one signature yellow.
+    performance_loop: Weekly street-vox clip where strangers sing the hook back.
+    dropoff: Strong TikTok, near-dead Boomplay profile; no artist page art.
+
+  - name: Zaituni
+    country: UG
+    city: Kampala
+    subgenre: luganda-pop
+    tier: upcoming
+    active_last_120d: true
+    last_audit: 2026-09-01
+    arena_channel: CM / Competitors / Luganda Pop
+    metrics:
+      monthly_listeners: 8900
+      boomplay_streams: 195000
+      shortform_posts_per_week: 4
+      shortform_median_views: 9500
+      dj_spins_30d: 9
+      radio_adds_30d: 1
+      editorial_playlist_adds_90d: 0
+      whatsapp_list_size: 540
+      live_shows_90d: 6
+      crossborder_listener_share: 0.05
+    visual_hooks: Consistent 4:5 portraits, single-source lighting, no text on image.
+    performance_loop: Acoustic hook-only clips filmed in the same stairwell each time.
+    dropoff: No DJ pack; club rotation stalls after release week.
+
+  - name: Brian Ssekanjako
+    country: UG
+    city: Entebbe
+    subgenre: luganda-pop
+    tier: upcoming
+    active_last_120d: true
+    last_audit: 2026-08-28
+    arena_channel: CM / Competitors / Luganda Pop
+    metrics:
+      monthly_listeners: 5100
+      boomplay_streams: 88000
+      shortform_posts_per_week: 2
+      shortform_median_views: 3100
+      dj_spins_30d: 4
+      radio_adds_30d: 0
+      editorial_playlist_adds_90d: 0
+      whatsapp_list_size: 220
+      live_shows_90d: 3
+      crossborder_listener_share: 0.03
+    visual_hooks: Lake-shore location shoots; recognisable but repetitive.
+    performance_loop: Lyric-reveal posts with Luganda-English subtitle pairs.
+    dropoff: Posts in bursts then vanishes for 3 weeks; algorithm resets.
+
+  - name: Deejay Ntale
+    country: UG
+    city: Kampala
+    subgenre: ea-amapiano
+    tier: upcoming
+    active_last_120d: true
+    last_audit: 2026-09-05
+    arena_channel: CM / Competitors / EA Amapiano
+    metrics:
+      monthly_listeners: 16400
+      boomplay_streams: 310000
+      shortform_posts_per_week: 7
+      shortform_median_views: 31000
+      dj_spins_30d: 21
+      radio_adds_30d: 2
+      editorial_playlist_adds_90d: 2
+      whatsapp_list_size: 1400
+      live_shows_90d: 12
+      crossborder_listener_share: 0.18
+    visual_hooks: Log-drum waveform motif reused across every asset.
+    performance_loop: Behind-the-decks loop clips with crowd audio, posted same night.
+    dropoff: Almost no press; zero long-form presence.
+
+  - name: Mariam Kiwanuka
+    country: KE
+    city: Nairobi
+    subgenre: regional-afrobeats
+    tier: mid
+    active_last_120d: true
+    last_audit: 2026-09-03
+    arena_channel: CM / Competitors / Regional Afrobeats
+    metrics:
+      monthly_listeners: 82000
+      boomplay_streams: 1900000
+      shortform_posts_per_week: 5
+      shortform_median_views: 47000
+      dj_spins_30d: 28
+      radio_adds_30d: 6
+      editorial_playlist_adds_90d: 5
+      whatsapp_list_size: 3100
+      live_shows_90d: 14
+      crossborder_listener_share: 0.41
+    visual_hooks: Editorial-grade press shots refreshed every release, single art director.
+    performance_loop: Release-week radio tour clipped into 12 short-form assets.
+    dropoff: Weak grassroots club presence outside Nairobi CBD.
+
+  - name: Juma Bakari
+    country: TZ
+    city: Dar es Salaam
+    subgenre: regional-afrobeats
+    tier: mid
+    active_last_120d: true
+    last_audit: 2026-09-03
+    arena_channel: CM / Competitors / Regional Afrobeats
+    metrics:
+      monthly_listeners: 145000
+      boomplay_streams: 4200000
+      shortform_posts_per_week: 4
+      shortform_median_views: 61000
+      dj_spins_30d: 33
+      radio_adds_30d: 8
+      editorial_playlist_adds_90d: 7
+      whatsapp_list_size: 5200
+      live_shows_90d: 18
+      crossborder_listener_share: 0.36
+    visual_hooks: Saturated coastal palette; consistent logo lockup bottom-right.
+    performance_loop: Dance-challenge seeded to 20 paid creators on day one.
+    dropoff: Content quality drops sharply between release cycles.
