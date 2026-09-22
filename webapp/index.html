@@ -121,20 +121,40 @@
       <div><strong>Chartmeter</strong><small id="who">East Africa Intelligence</small></div>
     </div>
     <nav id="nav">
-      <button data-view="overview" class="active"><span>◈</span> Overview</button>
-      <button data-view="connect"><span>⇄</span> Connect platforms</button>
-      <button data-view="discover"><span>✦</span> Find my competition</button>
-      <button data-view="gaps"><span>◆</span> Gap analysis</button>
-      <button data-view="competitors"><span>◇</span> Competitor matrix</button>
-      <button data-view="radar"><span>◉</span> DJ &amp; radio radar</button>
-      <button data-view="swipe"><span>❏</span> Swipe file</button>
-      <button data-view="sources"><span>⇡</span> Data sources</button>
+      <div class="navgrp"><div class="lbl">Analytics</div>
+        <button data-view="overview" class="active"><span class="i">◈</span> Dashboard</button>
+        <button data-view="cpp"><span class="i">◎</span> Performance score</button>
+        <button data-view="gaps"><span class="i">◆</span> Gap analysis</button>
+        <button data-view="compare"><span class="i">⊞</span> Head-to-head</button>
+      </div>
+      <div class="navgrp"><div class="lbl">Intelligence</div>
+        <button data-view="swot"><span class="i">✳</span> SWOT</button>
+        <button data-view="competitors"><span class="i">◇</span> Competitors</button>
+        <button data-view="discover"><span class="i">✦</span> Find competition</button>
+      </div>
+      <div class="navgrp"><div class="lbl">Growth</div>
+        <button data-view="plans"><span class="i">◈</span> Marketing plans</button>
+        <button data-view="radar"><span class="i">◉</span> DJ &amp; radio radar</button>
+        <button data-view="swipe"><span class="i">❏</span> Swipe file</button>
+      </div>
+      <div class="navgrp"><div class="lbl">Setup</div>
+        <button data-view="connect"><span class="i">⇄</span> Connect platforms</button>
+        <button data-view="sources"><span class="i">⇡</span> Data sources</button>
+      </div>
     </nav>
     <div class="side-foot">
       <div id="acct"></div>
     </div>
   </aside>
-  <main id="main"><div class="loading">Loading…</div></main>
+  <main id="main">
+    <div class="topbar">
+      <span class="t-name" id="t-name">—</span>
+      <span id="t-meta" class="tiny"></span>
+      <span class="spacer"></span>
+      <button class="ghost sm" id="t-sync">Sync stats</button>
+    </div>
+    <div id="page" class="page"><div class="loading">Loading…</div></div>
+  </main>
 </div>
 
 <div id="toast" class="toast"></div>

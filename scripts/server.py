@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import accounts  # noqa: E402
 import chartmeter as cm  # noqa: E402
 import discover  # noqa: E402
+import insights  # noqa: E402
 import links as linkmod  # noqa: E402
 import providers  # noqa: E402
 
@@ -121,8 +122,10 @@ def compute_overview(ws: dict) -> dict:
     radar = ws.get("radar") or []
     cold = [c.get("name") for c in radar if (cm.days_since(c.get("last_contact")) or 0) > 30]
     linked = artist.get("links") or {}
+    peers_list = cm.peers(artist, ws.get("competitors") or [])
     return {
         "artist": artist,
+        "cpp": insights.cpp(artist, peers_list),
         "counts": {"competitors": len(ws.get("competitors") or []),
                    "peers": gaps["peer_count"], "radar": len(radar),
                    "swipe": len(ws.get("swipe") or []), "cold": len(cold),
@@ -438,6 +441,37 @@ class Handler(BaseHTTPRequestHandler):
                               "artist": ws.get("artist") or {},
                               "tier_labels": cm.TIER_LABEL, "demo": demo,
                               "metrics": [{"key": k, "label": l} for k, l in cm.METRICS]})
+        if path == "/api/swot":
+            artist = ws.get("artist") or {}
+            prs = cm.peers(artist, ws.get("competitors") or [])
+            d = insights.swot(artist, prs, ws.get("radar") or [])
+            d["demo"] = demo
+            return self.json(d)
+        if path == "/api/plans":
+            artist = ws.get("artist") or {}
+            prs = cm.peers(artist, ws.get("competitors") or [])
+            d = insights.plans(artist, prs, ws.get("radar") or [])
+            d["demo"] = demo
+            return self.json(d)
+        if path == "/api/cpp":
+            artist = ws.get("artist") or {}
+            prs = cm.peers(artist, ws.get("competitors") or [])
+            return self.json(insights.cpp(artist, prs))
+        if path == "/api/compare":
+            artist = ws.get("artist") or {}
+            prs = cm.peers(artist, ws.get("competitors") or [])
+            rows = []
+            for key, label in cm.METRICS:
+                ours = (artist.get("metrics") or {}).get(key)
+                acts = []
+                for p in prs:
+                    v = (p.get("metrics") or {}).get(key)
+                    if isinstance(v, (int, float)):
+                        acts.append({"name": p.get("name"), "value": v})
+                rows.append({"key": key, "label": label, "ours": ours,
+                             "acts": sorted(acts, key=lambda x: -x["value"])})
+            return self.json({"rows": rows, "artist": artist.get("name"),
+                              "peers": [p.get("name") for p in prs], "demo": demo})
         if path == "/api/discover":
             return self.json(discover.suggest(ws.get("artist") or {},
                                               ws.get("competitors") or []))

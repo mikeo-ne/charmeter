@@ -4,7 +4,8 @@
 
   var home = document.getElementById("home");
   var appEl = document.getElementById("app");
-  var main = document.getElementById("main");
+  var main = document.getElementById("page");
+var shell = document.getElementById("main");
   var modal = document.getElementById("modal");
   var modalBody = document.getElementById("modal-body");
   var modalTitle = document.getElementById("modal-title");
@@ -169,10 +170,14 @@
           stat("DJ spins (30d)", metricVal("dj_spins_30d", m.dj_spins_30d), "manual — fieldwork") +
           stat("Platforms linked", String(linked), linked ? "syncing" : "none yet") +
         "</div>" +
-        '<div class="grid g3" style="margin-top:14px">' +
-          '<div class="card"><div class="health"><div class="ring" style="--p:' + d.health +
-            '"><b>' + d.health + '%</b></div><div class="stat"><span class="k">Competitive health</span>' +
-            '<span class="s">Dimensions at or above the peer median.</span></div></div></div>' +
+        '<div class="grid g3" style="margin-top:13px">' +
+          '<div class="card"><div class="scorewrap">' +
+            ringHTML((d.cpp && d.cpp.score) || 0, "CPP score") +
+            '<div class="catlist">' +
+            Object.keys((d.cpp && d.cpp.categories) || {}).map(function (k) {
+              return catBar(k, d.cpp.categories[k]); }).join("") +
+            '<button class="ghost sm" data-go="cpp" style="margin-top:4px">View breakdown</button>' +
+            "</div></div></div>" +
           '<div class="card"><div class="stat"><span class="k">Peer set</span><span class="v">' +
             c.peers + '</span><span class="s">of ' + c.competitors +
             " tracked acts match your tier + subgenre</span></div></div>" +
@@ -181,7 +186,20 @@
             " contacts untouched 30+ days</span></div></div>" +
         "</div>" +
         '<h2 class="sec">Highest-leverage deficits</h2><div class="card">' + defs + "</div>" +
-        '<h2 class="sec">Your wedge</h2><div class="card">' + surp + "</div>";
+        '<h2 class="sec">Your wedge</h2><div class="card">' + surp + "</div>" +
+        '<h2 class="sec">Go deeper</h2><div class="grid g3">' +
+        '<div class="card"><div class="stat"><span class="k">Auto SWOT</span>' +
+        '<span class="s" style="margin:0 0 10px">Strengths, weaknesses, opportunities and ' +
+        'threats derived from your gaps.</span></div>' +
+        '<button class="ghost sm" data-go="swot">Open SWOT</button></div>' +
+        '<div class="card"><div class="stat"><span class="k">Marketing plans</span>' +
+        '<span class="s" style="margin:0 0 10px">Prioritised 30-day campaigns for your ' +
+        'three biggest gaps.</span></div>' +
+        '<button class="ghost sm" data-go="plans">Open plans</button></div>' +
+        '<div class="card"><div class="stat"><span class="k">Head-to-head</span>' +
+        '<span class="s" style="margin:0 0 10px">Bar-by-bar comparison against every ' +
+        'matched peer.</span></div>' +
+        '<button class="ghost sm" data-go="compare">Compare</button></div></div>';
     });
   };
 
@@ -250,6 +268,140 @@
             return "<tr><td>" + esc(r.name) + '</td><td style="color:var(--mut)">' +
               esc(r.why) + "</td></tr>"; }).join("") +
           "</tbody></table></div></div>" : "");
+    });
+  };
+
+
+  function ringHTML(score, label, color) {
+    return '<div class="ring" style="--p:' + score + ';--c:' + (color || "var(--acc)") +
+      '"><div class="in"><b>' + score + "</b><small>" + esc(label) + "</small></div></div>";
+  }
+
+  function catBar(name, val) {
+    var c = val >= 66 ? "var(--ok)" : val >= 34 ? "var(--acc)" : "var(--bad)";
+    return '<div class="catrow"><span class="cn">' + esc(name) + '</span>' +
+      '<span class="cb"><i style="width:' + val + '%;background:' + c + '"></i></span>' +
+      '<span class="cv">' + val + "</span></div>";
+  }
+
+  views.cpp = function () {
+    return api("/cpp").then(function (d) {
+      if (!d.peer_count) {
+        return '<div class="page-head"><h1>Performance score</h1></div>' +
+          '<div class="note bad">No matched peers yet — a percentile score needs a peer set.</div>' +
+          '<button class="btn" data-go="discover">Find my competition</button>';
+      }
+      var cats = Object.keys(d.categories).map(function (k) {
+        return catBar(k, d.categories[k]); }).join("");
+      var rows = d.detail.map(function (r) {
+        var c = r.percentile >= 66 ? "sur" : r.percentile >= 34 ? "par" : "def";
+        return "<tr><td><strong>" + esc(r.label) + "</strong></td><td>" +
+          '<span class="pill ' + c + '">' + r.percentile + "th pct</span></td>" +
+          '<td style="width:45%"><div class="bar"><i style="width:' + r.percentile + '%"></i></div></td>' +
+          '<td style="text-transform:capitalize;color:var(--mut)">' + esc(r.category) + "</td></tr>";
+      }).join("");
+      return '<div class="page-head"><h1>Cross-platform performance</h1>' +
+        "<p>Your percentile against " + d.peer_count +
+        " tier- and subgenre-matched peers, weighted toward active demand over raw audience size.</p></div>" +
+        '<div class="card"><div class="card-b"><div class="scorewrap">' +
+        ringHTML(d.score, "CPP score") +
+        '<div class="catlist">' + cats +
+        '<p class="tiny" style="margin:6px 0 0">Traction (DJ spins, short-form, radio) is ' +
+        "weighted above Reach, because followers without rotation do not move this market.</p>" +
+        "</div></div></div></div>" +
+        '<h2 class="sec">Percentile by metric</h2>' +
+        '<div class="card pad0"><div class="tbl-wrap"><table><thead><tr><th>Metric</th>' +
+        "<th>Percentile</th><th></th><th>Category</th></tr></thead><tbody>" + rows +
+        "</tbody></table></div></div>";
+    });
+  };
+
+  views.swot = function () {
+    return api("/swot").then(function (d) {
+      if (!d.peer_count) {
+        return '<div class="page-head"><h1>SWOT</h1></div>' +
+          '<div class="note bad">SWOT is generated from your gaps against matched peers. ' +
+          "Add competitors first.</div>" +
+          '<button class="btn" data-go="discover">Find my competition</button>';
+      }
+      function block(items, cls, title, pill) {
+        var body = items.map(function (x) {
+          return '<div class="sw-item"><div class="h">' + esc(x.text) + "</div>" +
+            (x.note ? '<div class="n">' + esc(x.note) + "</div>" : "") +
+            (x.action ? '<div class="a">→ ' + esc(x.action) + "</div>" : "") + "</div>";
+        }).join("") || '<p class="empty">Nothing detected.</p>';
+        return '<div class="card ' + cls + ' pad0"><div class="card-h"><h3>' + esc(title) +
+          '</h3><span class="pill ' + pill + '">' + items.length + "</span></div>" +
+          '<div class="card-b">' + body + "</div></div>";
+      }
+      return demoBanner(d.demo) +
+        '<div class="page-head"><h1>SWOT analysis</h1><p>Generated automatically from ' +
+        esc(d.generated_from) + ". Every line cites the number that triggered it.</p></div>" +
+        '<div class="swot">' +
+        block(d.strengths, "s-card", "Strengths", "s") +
+        block(d.weaknesses, "w-card", "Weaknesses", "w") +
+        block(d.opportunities, "o-card", "Opportunities", "o") +
+        block(d.threats, "t-card", "Threats", "t") +
+        "</div>" +
+        '<div class="note info">This updates itself every time your stats or peer set change — ' +
+        "it is never a document you maintain by hand.</div>";
+    });
+  };
+
+  views.plans = function () {
+    return api("/plans").then(function (d) {
+      if (!d.peer_count) {
+        return '<div class="page-head"><h1>Marketing plans</h1></div>' +
+          '<div class="note bad">Plans are built from your biggest gaps vs peers. Add competitors first.</div>' +
+          '<button class="btn" data-go="discover">Find my competition</button>';
+      }
+      var html = demoBanner(d.demo) +
+        '<div class="page-head"><h1>Marketing &amp; promotion plans</h1>' +
+        "<p>Prioritised 30-day campaigns, generated from your largest gaps against the peer median.</p></div>";
+      d.plans.forEach(function (p) {
+        html += '<div class="card plan"><div class="card-b">' +
+          '<div class="plan-h"><div class="pr">' + p.priority + "</div><div>" +
+          "<h3>" + esc(p.title) + "</h3>" +
+          '<p class="why">' + esc(p.why) + "</p></div></div>" +
+          '<div class="trigger">Triggered by: ' + esc(p.trigger) + "</div>" +
+          '<div class="weeks">' + p.weeks.map(function (w) {
+            return '<div class="week"><h4>' + esc(w.label) + "</h4><ul>" +
+              w.tasks.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") +
+              "</ul></div>";
+          }).join("") + "</div>" +
+          '<div class="kpi">Measure: <b>' + esc(p.kpi) + "</b></div>" +
+          "</div></div>";
+      });
+      return html;
+    });
+  };
+
+  views.compare = function () {
+    return api("/compare").then(function (d) {
+      if (!d.peers.length) {
+        return '<div class="page-head"><h1>Head-to-head</h1></div>' +
+          '<div class="note bad">No matched peers to compare against yet.</div>' +
+          '<button class="btn" data-go="discover">Find my competition</button>';
+      }
+      var blocks = d.rows.filter(function (r) { return r.acts.length; }).map(function (r) {
+        var all = r.acts.slice();
+        if (typeof r.ours === "number") all.push({ name: d.artist, value: r.ours, me: true });
+        all.sort(function (a, b) { return b.value - a.value; });
+        var max = all[0] ? all[0].value : 1;
+        return '<div class="card pad0"><div class="card-h"><h3>' + esc(r.label) + "</h3>" +
+          '<span class="legend"><b style="background:var(--acc)"></b>' + esc(d.artist) +
+          '<b style="background:#2b3a4d;margin-left:10px"></b>peers</span></div><div class="card-b">' +
+          all.map(function (a) {
+            return '<div class="cbar"><span class="nm' + (a.me ? " me" : "") + '">' +
+              esc(a.name) + '</span><span class="tr"><i class="' + (a.me ? "me" : "") +
+              '" style="width:' + (max ? (a.value / max * 100) : 0) + '%"></i></span>' +
+              '<span class="vl">' + metricVal(r.key, a.value) + "</span></div>";
+          }).join("") + "</div></div>";
+      });
+      return demoBanner(d.demo) +
+        '<div class="page-head"><h1>Head-to-head</h1><p>You against each matched peer, ' +
+        "metric by metric.</p></div>" +
+        '<div class="grid g2">' + blocks.join("") + "</div>";
     });
   };
 
@@ -443,10 +595,21 @@
   }
 
   // ------------------------------------------------------------- render + wiring
+  function updateTopbar() {
+    api("/overview").then(function (d) {
+      var a = d.artist || {};
+      document.getElementById("t-name").textContent = a.name || "Your artist";
+      document.getElementById("t-meta").textContent =
+        [a.subgenre, a.tier ? a.tier + " tier" : "", d.last_sync ? "synced " + d.last_sync : ""]
+          .filter(Boolean).join("  ·  ");
+    }).catch(function () {});
+  }
+
   function render() {
     main.innerHTML = '<div class="loading">Loading…</div>';
     views[view]().then(function (html) {
       main.innerHTML = html;
+      updateTopbar();
       wire();
     }).catch(function (e) {
       main.innerHTML = '<div class="note bad">Failed to load. ' +
@@ -581,6 +744,19 @@
     syncNav();
     render();
   });
+  document.getElementById("t-sync").onclick = function () {
+    var b = document.getElementById("t-sync");
+    b.disabled = true; b.textContent = "Syncing…";
+    post("/sync", {}).then(function (r) {
+      var n = Object.keys(r.metrics || {}).length;
+      toast(n ? n + " metric(s) updated" : "No new data — check platform keys");
+      render();
+    }).catch(function (e) {
+      toast((e && e.errors && e.errors[0]) || "Add platform links first", true);
+      view = "connect"; syncNav(); render();
+    }).then(function () { b.disabled = false; b.textContent = "Sync stats"; });
+  };
+
   document.getElementById("modal-close").onclick = closeModal;
   modal.addEventListener("click", function (e) { if (e.target === modal) closeModal(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
